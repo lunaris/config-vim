@@ -13,15 +13,36 @@ set winminheight=0  " No minimum window height.
 set shell=zsh       " We're using zsh.
 set mat=2           " Blink for 2/10 of a second.
 
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
-                    " Load all Vundle bundles.
+" NeoBundle setup
+" ===============
+set rtp+=~/.vim/bundle/neobundle.vim/
+call neobundle#begin(expand('~/.vim/bundle/'))
 
-Bundle 'gmarik/vundle'
-Bundle 'tpope/vim-fugitive'
-Bundle 'tpope/vim-surround'
-Bundle 'noah/vim256-color'
-Bundle 'godlygeek/tabular'
+NeoBundleFetch 'Shougo/neobundle.vim'
+
+NeoBundle 'Shougo/unite.vim'
+NeoBundle 'Shougo/vimproc.vim',
+  \ {
+  \ 'build' : {
+  \     'windows' : 'tools\\update-dll-mingw',
+  \     'cygwin' : 'make -f make_cygwin.mak',
+  \     'mac' : 'make -f make_mac.mak',
+  \     'linux' : 'make',
+  \     'unix' : 'gmake',
+  \    },
+  \ }
+
+NeoBundle 'bitc/vim-hdevtools'
+NeoBundle 'godlygeek/tabular'
+NeoBundle 'leafgarland/typescript-vim'
+NeoBundle 'lunaris/vim-him'
+NeoBundle 'noah/vim256-color'
+NeoBundle 'scrooloose/syntastic'
+NeoBundle 'tpope/vim-fugitive'
+NeoBundle 'tpope/vim-surround'
+NeoBundle 'tpope/vim-unimpaired'
+
+call neobundle#end()
 
 " Colour schemes / look and feel
 " ==============================
@@ -102,6 +123,7 @@ filetype indent on
 
 set wrap            " Turn on text wrapping.
 set textwidth=79    " Hard wrap at 80 characters.
+set colorcolumn=80  " Display the 80-character margin.
 
 func! DeleteTrailingWS()
   norm mz
@@ -115,7 +137,27 @@ map <leader>dw :call DeleteTrailingWS()<cr>
 autocmd BufWrite * :call DeleteTrailingWS()
                     " Automatically delete trailing whitespace on saving.
 
-map <leader>fd :set ff=dos<CR>:w<CR>
-                    " Save in a DOS compatible format.
-map <leader>fu :set ff=unix<CR>:w<CR>
-                    " Save in a Unix compatible format.
+autocmd BufEnter,BufNewFile,BufRead *.tsx? setlocal ft=typescript
+                    " Make sure XML plugins don't ruin TypeScript support.
+
+" Unite
+" =====
+
+nnoremap <Leader>ff :Unite -buffer-name=files -start-insert
+  \ file_rec/git:--cached:--others:--exclude-standard<CR>
+
+autocmd FileType unite call s:initialise_unite_buffer()
+function! s:initialise_unite_buffer()
+  " Enable <C-j> and <C-k> for navigating Unite buffers when in insert mode.
+  imap <buffer> <C-j> <Plug>(unite_select_next_line)
+  imap <buffer> <C-k> <Plug>(unite_select_previous_line)
+endfunction
+
+" Syntastic
+" =========
+
+let g:syntastic_always_populate_loc_list=1
+let g:syntastic_auto_loc_list=1
+let g:syntastic_check_on_open=1
+let g:syntastic_check_on_wq=0
+let g:syntastic_haskell_checkers=['hdevtools']
